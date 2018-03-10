@@ -1,22 +1,18 @@
-function Entity(game, pos, dim) {
+function Entity(game, pos, rad) {
     this.game = game;
     this.x = pos.x;
     this.y = pos.y;
-    this.w = dim.w;
-    this.h = dim.h;
+    this.radius = rad;
     this.removeFromWorld = false;
 
     this.entityType = 0;
 }
 
 Entity.prototype.collide = function(otherEntity) {
-    if (this.x - (this.w / 2) > otherEntity.x + (otherEntity.w / 2) ||
-        this.x + (this.w / 2) < otherEntity.x - (otherEntity.w / 2) ||
-        this.y + (this.h / 2) < otherEntity.y - (otherEntity.h / 2) ||
-        this.y - (this.h / 2) > otherEntity.y + (otherEntity.h / 2))
-        return false;
-    else
-        return true;
+    var deltaX = otherEntity.x - this.x;
+    var deltaY = otherEntity.y - this.y;
+    var radii = otherEntity.radius + this.radius;
+    return deltaX * deltaX + deltaY * deltaY < radii * radii;
 }
 
 Entity.prototype.update = function () {

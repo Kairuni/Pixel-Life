@@ -136,6 +136,8 @@ GameEngine.prototype.draw = function () {
 }
 
 GameEngine.prototype.update = function () {
+
+
     var entitiesCount = this.entities.length;
 
     for (var i = 0; i < entitiesCount; i++) {
@@ -154,10 +156,12 @@ GameEngine.prototype.update = function () {
 }
 
 GameEngine.prototype.loop = function () {
+    //console.log("Pre: " + this.timer.gameTime);
     this.clockTick = this.timer.tick();
     this.update();
     this.draw();
     this.space = null;
+//    console.log("Post: " + this.timer.gameTime);
 }
 
 GameEngine.prototype.tData = function(x, y) {

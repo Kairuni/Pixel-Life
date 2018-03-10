@@ -1,7 +1,7 @@
 const RES_X = window.innerWidth;
 const RES_Y = window.innerHeight;
 
-const RANDOM_CHANCE = 0.0005;
+const RANDOM_CHANCE = 0.001;
 
 function Background(game) {
     Entity.call(this, game, 0, 400);
@@ -30,24 +30,36 @@ ASSET_MANAGER.downloadAll(function () {
     var ctx = canvas.getContext('2d');
 
     var gameEngine = new GameEngine();
-    gameEngine.partitioner = new levelPartitioner({x: RES_X * SCALE_FACTOR, y: RES_Y * SCALE_FACTOR}, 10);
+    gameEngine.partitioner = new levelPartitioner({x: RES_X, y: RES_Y}, 20);
 
 
     //var bg = new Background(gameEngine, {x: 0, y: 0}, {w: 0, h: 0});
     //gameEngine.addStaticEntity(bg);
 
-    for (var x = 0; x < RES_X * SCALE_FACTOR; x += SCALE_FACTOR) {
-        for (var y = 0; y < RES_Y * SCALE_FACTOR; y += SCALE_FACTOR) {
+    count = 0;
+
+    for (var x = 0; x < RES_X; x += 4) {
+        for (var y = 0; y < RES_Y; y += 4) {
             var rnd = Math.random();
 
             if (rnd < RANDOM_CHANCE) {
                 new Unit(gameEngine, {'x': x, 'y': y}, 0);
+                count++;
             } else if (rnd >= RANDOM_CHANCE && rnd <= 1.3 * RANDOM_CHANCE) {
                 new Unit(gameEngine, {'x': x, 'y': y}, 1);
+                count++;
             } else if (rnd >= RANDOM_CHANCE * 1.3 && rnd <= 1.5 * RANDOM_CHANCE) {
                 new Unit(gameEngine, {'x': x, 'y': y}, 2);
+                count++;
             }
+            if (count > 3000)
+                break;
         }
+        //console.log(count);
+
+        if (count > 3000)
+            break;
+
         // console.log("One row down.");
     }
 

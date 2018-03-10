@@ -13,10 +13,10 @@ class levelPartitioner {
 
     getBounds(entity) {
         var bounds = {
-            x1: Math.floor((entity.x - (entity.w / 2)) / this.gridSize),
-            x2: Math.floor((entity.x + (entity.w / 2)) / this.gridSize),
-            y1: Math.floor((entity.y - (entity.h / 2)) / this.gridSize),
-            y2: Math.floor((entity.y + (entity.h / 2)) / this.gridSize)
+            x1: Math.floor((entity.x - (entity.radius / 2)) / this.gridSize),
+            x2: Math.floor((entity.x + (entity.radius / 2)) / this.gridSize),
+            y1: Math.floor((entity.y - (entity.radius / 2)) / this.gridSize),
+            y2: Math.floor((entity.y + (entity.radius / 2)) / this.gridSize)
         };
 
         // Limit the box to 'within the grid.'
@@ -102,13 +102,13 @@ class levelPartitioner {
                 var walls = this.grid[x][y].walls;
 
                 for (var i = 0; i < Math.max(ships.length, bullets.length, walls.length); i++) {
-                    if (test.ship && i < ships.length && i < ships[i].collide(entity) && collisions.ship.indexOf(ships[i]) == -1) {
+                    if (test.ship && i < ships.length && ships[i].collide(entity) && collisions.ship.indexOf(ships[i]) == -1) {
                         collisions.ship.push(ships[i]);
                     }
-                    if (test.wall && i < walls.length && i < walls[i].collide(entity) && collisions.wall.indexOf(walls[i]) == -1) {
+                    if (test.wall && i < walls.length && walls[i].collide(entity) && collisions.wall.indexOf(walls[i]) == -1) {
                         collisions.wall.push(walls[i]);
                     }
-                    if (test.bullet && i < bullets.length && i < bullets[i].collide(entity) && collisions.bullet.indexOf(bullets[i]) == -1) {
+                    if (test.bullet && i < bullets.length && bullets[i].collide(entity) && collisions.bullet.indexOf(bullets[i]) == -1) {
                         collisions.bullet.push(bullets[i]);
                     }
                 }

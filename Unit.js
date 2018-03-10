@@ -1,7 +1,7 @@
-const SCALE_FACTOR = 2;
-const UNIT_RADIUS = 2;
+const UNIT_RADIUS = 4;
 const HUNGER_LIMIT = 120;
 const MUTATE_FACTOR = 0.00005;
+const BASE_BUFF_MAX = 3;
 const HERBIVORE_ATK = 3;
 const BASE_VEL = 75;
 const BASE_ATK = 10;
@@ -10,6 +10,8 @@ const BASE_HP = 10;
 const RANDOM_DIR_SHIFT = 1;
 const BREED_CD = 5;
 const HUNGER_MULTIPLIER = 2;
+const SIGHT_RADIUS = 100;
+const MAX_SIGHT_ANGLE = 3.1415 / 6;
 
 function buildBasicFactionColors(game) {
     // Build faction colors for 'herbivore wildlife', 'carnivore wildlife'
@@ -19,32 +21,38 @@ function buildBasicFactionColors(game) {
 
 class Unit extends movingObject {
     constructor(game, pos, faction) {
-        super(game, pos, UNIT_RADIUS, BASE_VEL);
+        super(game, pos, UNIT_RADIUS);
 
         this.entityType = 1;
         this.dir = Math.random() * 2 * 3.1415;
 
         // SURVIVAL STATS
-        this.vel = BASE_VEL;
+        this.vel = BASE_VEL + (Math.random() * BASE_BUFF_MAX);
         this.faction = faction;
         if (!game.factionCount[faction])
             game.factionCount[faction] = 0;
         game.factionCount[faction] += 1;
         this.food = 100.0;
-        this.atk = BASE_ATK;
-        this.def = BASE_DEF;
-        this.mhp = BASE_HP;
+        this.atk = BASE_ATK + (Math.random() * BASE_BUFF_MAX);
+        this.def = BASE_DEF + (Math.random() * BASE_BUFF_MAX);
+        this.mhp = BASE_HP + (Math.random() * BASE_BUFF_MAX);
         this.hp = this.mhp;
 
         this.recentlyBred = 0;
         this.breedCooldown = BREED_CD;
 
         this.collidedWith = [];
+        this.saw = [];
 
         this.isChild = 0;
 
+        this.doLook = Math.random() * 30;
+
+        this.sight = SIGHT_RADIUS + (Math.random() * BASE_BUFF_MAX);
+
         if (faction == 0) {
-            this.atk = Math.random() * HERBIVORE_ATK;
+            this.atk = HERBIVORE_ATK + (Math.random() * BASE_BUFF_MAX);
+            this.sight = 3.1415 * .8;
         }
 
         if ((faction == 0 || faction == 1) && !this.game.factionColors[faction]) {
@@ -67,10 +75,20 @@ class Unit extends movingObject {
         this.x += this.xVel * this.game.clockTick;
         this.y += this.yVel * this.game.clockTick;
 
-        // Test for collisions
+        // Test for close range collisions
         var collisions = this.game.partitioner.testCollide(this, colTest);
+        this.handleNearCollisions(collisions);
 
-        this.handleCollisions(collisions);
+        // Test for sight collisions
+        if (this.doLook > 30) {
+            this.radius = this.sight;
+            var collisions = this.game.partitioner.testCollide(this, colTest);
+            //console.log(collisions);
+            this.handleSightCollisions(collisions);
+            this.radius = UNIT_RADIUS;
+            this.doLook = -1;
+        }
+        this.doLook += 1;
 
         // Add back to partitioner
         this.game.partitioner.addToGrid(this, this.entityType);
@@ -89,27 +107,50 @@ class Unit extends movingObject {
             this.recentlyBred -= this.game.clockTick;
 
         this.collidedWith = [];
-
-        // Test if we need to change direction.
-        //this.game.tData((this.x + this.xVel) / SCALE_FACTOR, (this.y + this.yVel) / SCALE_FACTOR);
-        this.dir = this.dir - 0.05 * RANDOM_DIR_SHIFT + 0.05 * 2 * Math.random() * RANDOM_DIR_SHIFT;;
+        this.saw = [];
 
         this.checkDeath();
 
         // Hardcoding this for now:
         if (this.x < 0) {
-            this.x = RES_X * SCALE_FACTOR;
-        } else if (this.x > RES_X * SCALE_FACTOR) {
+            this.x = RES_X;
+        } else if (this.x > RES_X) {
             this.x = 0;
         }
         if (this.y < 0) {
-            this.y = RES_Y * SCALE_FACTOR;
-        } else if (this.y > RES_Y * SCALE_FACTOR) {
+            this.y = RES_Y;
+        } else if (this.y > RES_Y) {
             this.y = 0;
         }
     }
 
-    handleCollisions(collisions) {
+    handleSightCollisions(collisions) {
+        for (var i = 0; i < collisions.ship.length; i++) {
+            // If we have not collided with the other entity
+            //console.log("In sight col?");
+            if (this.saw.indexOf(collisions.ship[i]) == -1) {
+
+                var other = collisions.ship[i];
+
+                var angleToOther = Math.atan2(other.x - this.x, this.y - other.y) - (3.1415/2);
+
+                var diff = (this.dir - angleToOther);
+
+                if (Math.abs(diff) <= this.sight) {
+                    if (other.faction == this.faction && this.food >= 60 && !other.isChild && !this.isChild && this.recentlyBred <= 0 && other.recentlyBred <= 0) {
+                        this.dir = angleToOther;
+                    } else if (other.faction != this.faction && this.faction == 0) {
+                        // Run away if herbivore
+                        this.dir = angleToOther + 3.1415;
+                    } else if (other.faction != this.faction && this.food <= HUNGER_LIMIT) {
+                        this.dir = angleToOther;
+                    }
+                }
+            }
+        }
+    }
+
+    handleNearCollisions(collisions) {
         for (var i = 0; i < collisions.ship.length; i++) {
             // If we have not collided with the other entity
             if (this.collidedWith.indexOf(collisions.ship[i]) == -1) {
@@ -130,10 +171,10 @@ class Unit extends movingObject {
                     changeDir = true;
                 }
 
-                if (changeDir) {
+                /*if (changeDir) {
                     this.dir += 3.1415 - RANDOM_DIR_SHIFT + 2 * Math.random() * RANDOM_DIR_SHIFT;;
                     other.dir += 3.1415 - RANDOM_DIR_SHIFT + 2 * Math.random() * RANDOM_DIR_SHIFT;
-                }
+                }*/
             }
 
             this.collidedWith.push(collisions.ship[i]);
@@ -149,7 +190,8 @@ class Unit extends movingObject {
             new Effect(this.game, {'x': this.x, 'y': this.y}, "**", this.game.factionColors[this.faction], .75);
             other.hp -= dmg;
 
-            this.food += other.food;
+            if (this.faction != 0)
+                this.food += other.food;
         }
     }
 
@@ -192,10 +234,6 @@ class Unit extends movingObject {
         var color = this.game.factionColors[this.faction];
         var colorStr = "rgb(" + color.r + ", " + color.g + ", " + color.b + ")";
         ctx.fillStyle = colorStr;
-        //if (this.faction > 1)
-        //    console.log(color);
-        //ctx.fillStyle = "black";
-        //ctx.fillRect(Math.floor(this.x / SCALE_FACTOR) - this.radius, Math.floor(this.y / SCALE_FACTOR) - this.radius, (this.radius * 2) / SCALE_FACTOR, (this.radius * 2) / SCALE_FACTOR);
         ctx.fillRect(this.x, this.y, this.radius + 1, this.radius + 1);
     }
 }
