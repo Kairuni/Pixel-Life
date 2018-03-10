@@ -2,7 +2,7 @@ const UNIT_RADIUS = 4;
 const HUNGER_LIMIT = 120;
 const MUTATE_FACTOR = 0.00005;
 const BASE_BUFF_MAX = 3;
-const HERBIVORE_ATK = 3;
+const HERBIVORE_ATK = 4;
 const BASE_VEL = 75;
 const BASE_ATK = 10;
 const BASE_DEF = 5;
@@ -142,7 +142,7 @@ class Unit extends movingObject {
                     } else if (other.faction != this.faction && this.faction == 0) {
                         // Run away if herbivore
                         this.dir = angleToOther + 3.1415;
-                    } else if (other.faction != this.faction && this.food <= HUNGER_LIMIT) {
+                    } else if (other.faction != this.faction && this.food <= HUNGER_LIMIT && other.faction != 2) {
                         this.dir = angleToOther;
                     }
                 }
@@ -191,7 +191,7 @@ class Unit extends movingObject {
             other.hp -= dmg;
 
             if (this.faction != 0)
-                this.food += other.food;
+                this.food += other.food / 2;
         }
     }
 

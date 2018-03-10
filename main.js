@@ -1,7 +1,8 @@
 const RES_X = window.innerWidth;
 const RES_Y = window.innerHeight;
+const BASE_SPAWN = 2000;
 
-const RANDOM_CHANCE = 0.001;
+const RANDOM_CHANCE = 0.01;
 
 function Background(game) {
     Entity.call(this, game, 0, 400);
@@ -52,12 +53,12 @@ ASSET_MANAGER.downloadAll(function () {
                 new Unit(gameEngine, {'x': x, 'y': y}, 2);
                 count++;
             }
-            if (count > 3000)
+            if (count > BASE_SPAWN)
                 break;
         }
         //console.log(count);
 
-        if (count > 3000)
+        if (count > BASE_SPAWN)
             break;
 
         // console.log("One row down.");
