@@ -1,6 +1,6 @@
 const RES_X = window.innerWidth;
 const RES_Y = window.innerHeight;
-const BASE_SPAWN = 2000;
+const BASE_SPAWN = 500;
 
 const RANDOM_CHANCE = 0.01;
 
